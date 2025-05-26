@@ -1,0 +1,60 @@
+-------------------------------------------------------------------------------------------------------------------------------
+1) Consulta de Vendedores:
+SELECT id_vendedor, nome, salario FROM VENDEDORES WHERE inativo = FALSE ORDER BY nome ASC
+------------------------------------------------------------------------------------------------------------------------------- 
+
+------------------------------------------------------------------------------------------------------------------------------- 
+1) Funcionários com Salário Acima da Média: solução(subquery) ..todos os funcionarios ATIVOS (Não esta especificado...)
+ SELECT id_vendedor AS ID, nome, salario 
+      FROM VENDEDORES 
+          WHERE inativo = FALSE  
+          AND salario >( SELECT AVG (salario) FROM VENDEDORES )
+      ORDER BY salario DESC
+------------------------------------------------------------------------------------------------------------------------------- 
+
+-------------------------------------------------------------------------------------------------------------------------------
+ 1) Resumo por cliente:  Resumo por cliente: Escreva uma query para listar todos os clientes e o valor total de pedidos já transmitidos. 
+     A consulta deve retornar as colunas id, razao_social, total, ordenadas pelo total em ordem descendente. 
+     NAO FOI ESPECIFICADO CLIENTE ATIVO OU NÃO. 
+
+SELECT CLI.ID_CLIENTE AS ID, CLI.RAZAO_SOCIAL, COALESCE(SUM(PED.VALOR_TOTAL), 0) AS TOTAL
+FROM CLIENTES CLI
+LEFT JOIN PEDIDO PED ON CLI.ID_CLIENTE = PED.ID_CLIENTE  AND DATA_CANCELAMENTO IS NULL
+--WHERE CLI.INATIVO = FALSE
+GROUP BY CLI.ID_CLIENTE, CLI.RAZAO_SOCIAL
+ORDER BY TOTAL DESC
+-------------------------------------------------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------------------------------------------------
+Situação por pedido: Escreva uma query que retorne a situação atual de cada pedido da base. A consulta deve retornar as colunas id, valor, data e situacao. A situacao deve obedecer a seguinte regra:
+Se possui data de cancelamento preenchido: CANCELADO
+Se possui data de faturamento preenchido: FATURADO
+Caso não possua data de cancelamento e nem faturamento: PENDENTE
+
+    DATA_FATURAMENTO DATE,
+    DATA_CANCELAMENTO DATE
+
+
+SELECT ID_PEDIDO AS ID, VALOR_TOTAL AS VALOR, DATA_EMISSAO AS DATA, 
+CASE 
+	WHEN 
+      DATA_CANCELAMENTO IS NULL AND DATA_FATURAMENTO IS NULL
+    THEN 'PENDENTE'
+	ELSE 'FATURADO' 
+    END AS SITUACAO
+FROM PEDIDO  
+-------------------------------------------------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------------------------------------------------
+SELECT IP.ID_PRODUTO, 
+      SUM(IP.QUANTIDADE) AS quantidade_vendida, 
+      SUM(PD.VALOR_TOTAL) as TOTAL_VENDIDO,
+      COUNT(PD.ID_PEDIDO) as PEDIDOS, 
+      COUNT(PD.ID_CLIENTE) as CLIENTES
+FROM PEDIDO AS PD
+JOIN ITENS_PEDIDO AS IP ON IP.ID_PEDIDO = PD.ID_PEDIDO
+--WHERE PD.DATA_CANCELAMENTO IS NULL
+GROUP BY IP.ID_PRODUTO
+ORDER BY quantidade_vendida DESC, TOTAL_VENDIDO DESC
+
+-------------------------------------------------------------------------------------------------------------------------------
