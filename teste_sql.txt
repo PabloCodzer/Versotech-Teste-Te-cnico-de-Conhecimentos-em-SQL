@@ -1,15 +1,15 @@
 -------------------------------------------------------------------------------------------------------------------------------
 1) Consulta de Vendedores:
-SELECT id_vendedor, nome, salario FROM VENDEDORES WHERE inativo = FALSE ORDER BY nome ASC
+SELECT id_vendedor as ID, nome, salario FROM VENDEDORES WHERE inativo = FALSE ORDER BY nome ASC
 ------------------------------------------------------------------------------------------------------------------------------- 
 
 ------------------------------------------------------------------------------------------------------------------------------- 
 2) Funcionários com Salário Acima da Média: solução(subquery) ..todos os funcionarios ATIVOS (Não esta especificado...)
- SELECT id_vendedor AS ID, nome, salario 
-      FROM VENDEDORES 
-          WHERE inativo = FALSE  
-          AND salario >( SELECT AVG (salario) FROM VENDEDORES )
-      ORDER BY salario DESC
+SELECT id_vendedor AS ID, nome, salario 
+FROM VENDEDORES 
+WHERE inativo = FALSE  
+AND salario > (SELECT AVG(salario) FROM VENDEDORES WHERE inativo = FALSE)
+ORDER BY salario DESC
 ------------------------------------------------------------------------------------------------------------------------------- 
 
 -------------------------------------------------------------------------------------------------------------------------------
@@ -20,7 +20,7 @@ SELECT id_vendedor, nome, salario FROM VENDEDORES WHERE inativo = FALSE ORDER BY
 SELECT CLI.ID_CLIENTE AS ID, CLI.RAZAO_SOCIAL, COALESCE(SUM(PED.VALOR_TOTAL), 0) AS TOTAL
 FROM CLIENTES CLI
 LEFT JOIN PEDIDO PED ON CLI.ID_CLIENTE = PED.ID_CLIENTE  AND DATA_CANCELAMENTO IS NULL
---WHERE CLI.INATIVO = FALSE
+--WHERE CLI.INATIVO = FALSE    * não foi especificado filtrar por clientes ativos
 GROUP BY CLI.ID_CLIENTE, CLI.RAZAO_SOCIAL
 ORDER BY TOTAL DESC
 -------------------------------------------------------------------------------------------------------------------------------
@@ -37,24 +37,24 @@ Caso não possua data de cancelamento e nem faturamento: PENDENTE
 
 SELECT ID_PEDIDO AS ID, VALOR_TOTAL AS VALOR, DATA_EMISSAO AS DATA, 
 CASE 
-	WHEN 
-      DATA_CANCELAMENTO IS NULL AND DATA_FATURAMENTO IS NULL
-    THEN 'PENDENTE'
-	ELSE 'FATURADO' 
-    END AS SITUACAO
-FROM PEDIDO  
+    WHEN DATA_CANCELAMENTO IS NOT NULL THEN 'CANCELADO'
+    WHEN DATA_FATURAMENTO IS NOT NULL THEN 'FATURADO'
+    ELSE 'PENDENTE'
+END AS SITUACAO
+FROM PEDIDO
 -------------------------------------------------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------------------------------------------------
- 5) SELECT IP.ID_PRODUTO, 
-      SUM(IP.QUANTIDADE) AS quantidade_vendida, 
-      SUM(PD.VALOR_TOTAL) as TOTAL_VENDIDO,
-      COUNT(PD.ID_PEDIDO) as PEDIDOS, 
-      COUNT(PD.ID_CLIENTE) as CLIENTES
+ 5) Produtos Mais Vendidos
+SELECT 
+    IP.ID_PRODUTO, 
+    SUM(IP.QUANTIDADE) AS quantidade_vendida, 
+    SUM(IP.PRECO_PRATICADO * IP.QUANTIDADE) as TOTAL_VENDIDO,
+    COUNT(DISTINCT PD.ID_PEDIDO) as PEDIDOS, 
+    COUNT(DISTINCT PD.ID_CLIENTE) as CLIENTES
 FROM PEDIDO AS PD
 JOIN ITENS_PEDIDO AS IP ON IP.ID_PEDIDO = PD.ID_PEDIDO
---WHERE PD.DATA_CANCELAMENTO IS NULL
+WHERE PD.DATA_CANCELAMENTO IS NULL
 GROUP BY IP.ID_PRODUTO
 ORDER BY quantidade_vendida DESC, TOTAL_VENDIDO DESC
-
 -------------------------------------------------------------------------------------------------------------------------------
